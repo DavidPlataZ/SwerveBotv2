@@ -14,6 +14,8 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.Joystick;
+//import edu.wpi.first.wpilibj.JoystickButton;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
@@ -37,8 +39,10 @@ public class RobotContainer {
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
 
   // The driver's controller
-  XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
-
+  
+  //XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  Joystick m_joystick1 = new Joystick(0);
+  Joystick m_joystick2 = new Joystick(1);
 
 
   /**
@@ -61,12 +65,22 @@ public class RobotContainer {
             m_robotDrive));
 */
 
-          
+          /*
                 m_robotDrive.setDefaultCommand(new SwerveJoystickCmd(m_robotDrive, 
-               () -> -m_driverController.getRawAxis(1),
+               () -> -m_driverController.getXAxis(1),
                () -> -m_driverController.getRawAxis(0),
-                () -> -m_driverController.getRightX(), // 4 for the xbox controller 
+               () -> -m_driverController.getRightX(), // 4 for the xbox controller 
                () -> m_driverController.getRawButton(1) ));
+
+               */
+
+               m_robotDrive.setDefaultCommand(
+               new SwerveJoystickCmd(
+               m_robotDrive, 
+               m_joystick1.getX(),
+               m_joystick1.getY(),
+               m_joystick2.getZ(),
+               true));
         
         
                 //new JoystickButton(m_driverController, 5).whenPressed(() -> driveSubsystem.zeroHeading());
@@ -87,10 +101,10 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
 
-    new JoystickButton(m_driverController, 5).whenPressed(() -> m_robotDrive.reset_gyro());
+    new JoystickButton(m_joystick1, 5).whenPressed(() -> m_robotDrive.reset_gyro());
 
 
-    new JoystickButton(m_driverController, Button.kR1.value)
+    new JoystickButton(m_joystick1, Button.kR1.value)
         .whileTrue(new RunCommand(
             () -> m_robotDrive.setX(),
             m_robotDrive));

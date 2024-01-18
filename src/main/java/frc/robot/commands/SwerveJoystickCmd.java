@@ -15,17 +15,17 @@ import frc.robot.subsystems.DriveSubsystem;
 public class SwerveJoystickCmd extends CommandBase {
 
     private final DriveSubsystem driveSubsystem;
-    private final Supplier<Double> xSpdFunction, ySpdFunction, turningSpdFunction;
-    private final Supplier<Boolean> fieldOrientedFunction;
+    private final double xSpdFunction, ySpdFunction, turningSpdFunction;
+    private final boolean fieldOrientedFunction;
     private final SlewRateLimiter xLimiter, yLimiter, turningLimiter;
 
     public SwerveJoystickCmd(DriveSubsystem driveSubsystem,
-            Supplier<Double> xSpdFunction, Supplier<Double> ySpdFunction, Supplier<Double> turningSpdFunction, Supplier<Boolean> fieldOrientedFunction) {
+            double d, double e, double f, boolean b) {
         this.driveSubsystem = driveSubsystem;
-        this.xSpdFunction = xSpdFunction;
-        this.ySpdFunction = ySpdFunction;
-        this.turningSpdFunction = turningSpdFunction;
-        this.fieldOrientedFunction = fieldOrientedFunction;
+        this.xSpdFunction = d;
+        this.ySpdFunction = e;
+        this.turningSpdFunction = f;
+        this.fieldOrientedFunction = b;
         this.xLimiter = new SlewRateLimiter(DriveConstants.kMaxSpeedMetersPerSecond);
         this.yLimiter = new SlewRateLimiter(DriveConstants.kMaxSpeedMetersPerSecond);
         this.turningLimiter = new SlewRateLimiter(DriveConstants.kMaxAngularSpeed);
@@ -40,9 +40,9 @@ public class SwerveJoystickCmd extends CommandBase {
     @Override
     public void execute() {
         // 1. Get real-time joystick inputs
-        double xSpeed = xSpdFunction.get();
-        double ySpeed = ySpdFunction.get();
-        double turningSpeed = turningSpdFunction.get();
+        double xSpeed = xSpdFunction;
+        double ySpeed = ySpdFunction;
+        double turningSpeed = turningSpdFunction;
 
         // 2. Apply deadband
         xSpeed = Math.abs(xSpeed) > OIConstants.kDeadband ? xSpeed : 0.0;
@@ -57,7 +57,7 @@ public class SwerveJoystickCmd extends CommandBase {
 
         // 4. Construct desired chassis speeds
         ChassisSpeeds chassisSpeeds;
-        if (fieldOrientedFunction.get()) {
+        if (fieldOrientedFunction) {
             // Relative to field
             chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                     xSpeed, ySpeed, turningSpeed, driveSubsystem.getRotation2d());
