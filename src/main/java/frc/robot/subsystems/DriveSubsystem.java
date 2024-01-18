@@ -1,32 +1,31 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
 package frc.robot.subsystems;
 
-// Imports
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.Supplier;
+
+import com.kauailabs.navx.frc.AHRS;
+
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.util.WPIUtilJNI;
-// Swerve specific imports
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import frc.robot.SwerveUtils;
-// Position imports
-//import frc.robot.subsystems.NavX;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.util.WPIUtilJNI;
+//import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.SPI;
-// Constants
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.SwerveUtils;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-/* The DriveTrain class handles the drive subsystem of the robot.
- * Configured for REV Robotics Swerve Modules
- * 
- */
-public class DriveTrain extends SubsystemBase {
-
-  // Creates swerve modules
+public class DriveSubsystem extends SubsystemBase {
+  // Create MAXSwerveModules
   private final MAXSwerveModule m_frontLeft = new MAXSwerveModule(
       DriveConstants.kFrontLeftDrivingCanId,
       DriveConstants.kFrontLeftTurningCanId,
@@ -47,29 +46,24 @@ public class DriveTrain extends SubsystemBase {
       DriveConstants.kRearRightTurningCanId,
       DriveConstants.kBackRightChassisAngularOffset);
 
-  /* Gyro sensor, mainly used for field relativity
-   * NavX Gyro requires 3rd party vendor libraries
-   * 
-   */
-  private final AHRS m_navx = new AHRS(SPI.Port.kMXP);
+  // The gyro sensor
+  
+  private final AHRS m_gyro = new AHRS(SPI.Port.kMXP);
+ // private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
 
-  // Slew rate variables
+  // Slew rate filter variables for controlling lateral acceleration
   private double m_currentRotation = 0.0;
   private double m_currentTranslationDir = 0.0;
   private double m_currentTranslationMag = 0.0;
 
-  // Slew rate controlls lateral acceleration of robot
   private SlewRateLimiter m_magLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
   private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
   private double m_prevTime = WPIUtilJNI.now() * 1e-6;
 
-  /* Odemetry tracks the robot pose utilizing the gyro
-   * mainly used for field relativity
-   * 
-   */
+  // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(m_navx.getAngle()),
+      Rotation2d.fromDegrees(m_gyro.getAngle()),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
@@ -77,35 +71,60 @@ public class DriveTrain extends SubsystemBase {
           m_rearRight.getPosition()
       });
 
-  // Creates new Drive Subsystem
-  public DriveTrain() {
+  /** Creates a new DriveSubsystem. */
+  public DriveSubsystem() {
   }
 
-  // Updates odometry periodically
+  @Override
   public void periodic() {
+    // Update the odometry in the periodic block
     m_odometry.update(
-        Rotation2d.fromDegrees(m_navx.getAngle()),
+        Rotation2d.fromDegrees(m_gyro.getAngle()),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
+
+        SmartDashboard.putNumber("Robot Heading", getHeading());
   }
 
-  // Returns estimated robot pose
+  /**
+   * Returns the currently-estimated pose of the robot.
+   *
+   * @return The pose.
+   */
   public Pose2d getPose() {
     return m_odometry.getPoseMeters();
   }
+  public void reset_gyro() {
+    m_gyro.reset();
+}
 
-  public Rotation2d getRotation2d() {
-    return Rotation2d.fromDegrees(getHeading());
-  }
+public double getHeading() {
+  
+   return Math.IEEEremainder(m_gyro.getAngle(), 360);
+}
 
-  // Resets odometry to a specific pose
+public Rotation2d getRotation2d() {
+   return Rotation2d.fromDegrees(getHeading());
+}
+
+public void stopModules() {
+  m_frontLeft.stop();
+  m_rearLeft.stop();
+  m_frontRight.stop();
+  m_rearRight.stop();
+}
+  /**
+   * Resets the odometry to the specified pose.
+   *
+   * @param pose The pose to which to set the odometry.
+   */
   public void resetOdometry(Pose2d pose) {
     m_odometry.resetPosition(
-        Rotation2d.fromDegrees(m_navx.getAngle()),
+        Rotation2d.fromDegrees(m_gyro.getAngle()),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -115,17 +134,24 @@ public class DriveTrain extends SubsystemBase {
         pose);
   }
 
-  /* Drive method for swerve
-   * Uses two joysticks
-   * 
-   * xSpeed         = speed of robot in x direction
-   * ySpeed         = speed of robot in y direction
-   * rot            = angular rate of the robot
-   * fieldRelative  = if x and y speeds are relative to the field
-   * rateLimit      = enables smoother controlling 
-   * 
+  /**
+   * Method to drive the robot using joystick info.
+   *
+   * @param xSpeed        Speed of the robot in the x direction (forward).
+   * @param ySpeed        Speed of the robot in the y direction (sideways).
+   * @param rot           Angular rate of the robot.
+   * @param fieldRelative Whether the provided x and y speeds are relative to the
+   *                      field.
+   * @param rateLimit     Whether to enable rate limiting for smoother control.
    */
-  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, boolean rateLimit) {
+  // HERE IS THE FUNCTION FOR DRIVING FROM THE ORIGINAL 
+
+
+
+
+  // 
+  // THe  /* 
+ /*  public void drive(double xSpeed, double ySpeed, double rot,  boolean fieldRelative, boolean rateLimit) {
     
     double xSpeedCommanded;
     double ySpeedCommanded;
@@ -140,9 +166,10 @@ public class DriveTrain extends SubsystemBase {
       if (m_currentTranslationMag != 0.0) {
         directionSlewRate = Math.abs(DriveConstants.kDirectionSlewRate / m_currentTranslationMag);
       } else {
-        directionSlewRate = 500.0;
+        directionSlewRate = 500.0; //some high number that means the slew rate is effectively instantaneous
       }
       
+
       double currentTime = WPIUtilJNI.now() * 1e-6;
       double elapsedTime = currentTime - m_prevTime;
       double angleDif = SwerveUtils.AngleDifference(inputTranslationDir, m_currentTranslationDir);
@@ -151,7 +178,7 @@ public class DriveTrain extends SubsystemBase {
         m_currentTranslationMag = m_magLimiter.calculate(inputTranslationMag);
       }
       else if (angleDif > 0.85*Math.PI) {
-        if (m_currentTranslationMag > 1e-4) { 
+        if (m_currentTranslationMag > 1e-4) { //some small number to avoid floating-point errors with equality checking
           // keep currentTranslationDir unchanged
           m_currentTranslationMag = m_magLimiter.calculate(0.0);
         }
@@ -177,15 +204,14 @@ public class DriveTrain extends SubsystemBase {
       m_currentRotation = rot;
     }
 
-    // Speed conversion into correct units
+    // Convert the commanded speeds into the correct units for the drivetrain
     double xSpeedDelivered = xSpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond;
     double ySpeedDelivered = ySpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond;
     double rotDelivered = m_currentRotation * DriveConstants.kMaxAngularSpeed;
 
-    /*
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(m_navx.getAngle()))
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,getRotation2d())// Rotation2d.fromDegrees(m_gyro.getAngle()))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
     SwerveDriveKinematics.desaturateWheelSpeeds(
         swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
@@ -193,25 +219,10 @@ public class DriveTrain extends SubsystemBase {
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_rearLeft.setDesiredState(swerveModuleStates[2]);
     m_rearRight.setDesiredState(swerveModuleStates[3]);
-    */
+  }*/
 
-    ChassisSpeeds chassisSpeeds;
-        if (fieldRelative = true) {
-            // Relative to field
-            chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                    xSpeed, ySpeed, rot, Rotation2d.fromDegrees(getHeading()));
-        } else {
-            // Relative to robot
-            chassisSpeeds = new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered);
-        }
-        SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
-
-        setModuleStates(moduleStates);
-  }
-
-  /* Drive command, stop function
-   * While held, wheels stay in a X formation, and speed is set to 0
-   * 
+  /**
+   * Sets the wheels into an X formation to prevent movement.
    */
   public void setX() {
     m_frontLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
@@ -220,9 +231,10 @@ public class DriveTrain extends SubsystemBase {
     m_rearRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
   }
 
-  /* Sets swerve module states
-   * utilizes desiredstates to set robot to correct state
+  /**
+   * Sets the swerve ModuleStates.
    *
+   * @param desiredStates The desired SwerveModule states.
    */
   public void setModuleStates(SwerveModuleState[] desiredStates) {
     SwerveDriveKinematics.desaturateWheelSpeeds(
@@ -233,7 +245,7 @@ public class DriveTrain extends SubsystemBase {
     m_rearRight.setDesiredState(desiredStates[3]);
   }
 
-  // Resets drive encoders to read a position of 0
+  /** Resets the drive encoders to currently read a position of 0. */
   public void resetEncoders() {
     m_frontLeft.resetEncoders();
     m_rearLeft.resetEncoders();
@@ -241,25 +253,32 @@ public class DriveTrain extends SubsystemBase {
     m_rearRight.resetEncoders();
   }
 
-  // Zeros robot heading
+  /** Zeroes the heading of the robot. */
   public void zeroHeading() {
-    m_navx.reset();
+    m_gyro.reset();
   }
 
-  /* Returns the heading of the robot
-   * Returns the heading from -180 to 180 degrees
-   * 
+  /**
+   * Returns the heading of the robot.
+   *
+   * @return the robot's heading in degrees, from -180 to 180
    */
-  public double getHeading() {
-    return Math.IEEEremainder(-m_navx.getAngle(), 360.0);
-  }
+  // THis is the original for this code 
+ // return Rotation2d.fromDegrees(m_gyro.getAngle()).getDegrees();
 
-  // TODO: check if this works?
-  /* Returns turn rate of the Robot
-   * Uses gyro to determine rate
-   * 
+ // public double getHeading() {
+   // return Math.IEEEremainder(m_gyro.getAngle(), 360);
+  //  return Rotation2d.fromDegrees(m_gyro.getAngle()).getDegrees();
+  //}
+
+  /**
+   * Returns the turn rate of the robot.
+   *
+   * @return The turn rate of the robot, in degrees per second
    */
-  public double getTurnRate() {
-    return m_navx.getYaw() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
-  }
+
+   
+  //public double getTurnRate() {
+  //  return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+  //}
 }

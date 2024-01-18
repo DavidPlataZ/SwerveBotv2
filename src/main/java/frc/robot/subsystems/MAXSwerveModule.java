@@ -1,4 +1,6 @@
-// MAX SWERVE DRIVE MODULE CLASS (DO NOT EDIT)
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
 
@@ -158,5 +160,8 @@ public class MAXSwerveModule {
   /** Zeroes all the SwerveModule encoders. */
   public void resetEncoders() {
     m_drivingEncoder.setPosition(0);
+  }
+
+  public void stop() {
   }
 }
