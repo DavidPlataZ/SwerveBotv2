@@ -16,6 +16,8 @@ import frc.robot.SwerveUtils;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import com.kauailabs.navx.frc.AHRS;
+import com.revrobotics.RelativeEncoder;
+
 import edu.wpi.first.wpilibj.SPI;
 // Constants
 import frc.robot.Constants.DriveConstants;
@@ -24,8 +26,7 @@ import frc.robot.Constants.DriveConstants;
  * Configured for REV Robotics Swerve Modules
  * 
  */
-public class DriveTrain extends SubsystemBase {
-
+public class DriveTrain extends SubsystemBase {   
   // Creates swerve modules
   private final MAXSwerveModule m_frontLeft = new MAXSwerveModule(
       DriveConstants.kFrontLeftDrivingCanId,
@@ -76,10 +77,6 @@ public class DriveTrain extends SubsystemBase {
           m_rearLeft.getPosition(),
           m_rearRight.getPosition()
       });
-
-  // Creates new Drive Subsystem
-  public DriveTrain() {
-  }
 
   // Updates odometry periodically
   public void periodic() {
@@ -208,6 +205,7 @@ public class DriveTrain extends SubsystemBase {
 
         setModuleStates(moduleStates);
   }
+  
 
   /* Drive command, stop function
    * While held, wheels stay in a X formation, and speed is set to 0
@@ -262,4 +260,5 @@ public class DriveTrain extends SubsystemBase {
   public double getTurnRate() {
     return m_navx.getYaw() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
+  
 }

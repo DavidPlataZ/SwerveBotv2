@@ -12,25 +12,25 @@ import frc.robot.subsystems.Limelight;
 
 public class driveForwardToTarget extends CommandBase {
   private final Limelight m_lime;
-  private final DriveTrain m_drive;
+  private final DriveTrain m_robotDrive;
   /** Creates a new driveForwardToTarget. */
   public driveForwardToTarget(Limelight lime, DriveTrain drive) {
     m_lime = lime;
-    m_drive = drive;
-    addRequirements(m_drive, m_lime);
+    m_robotDrive = drive;
+    addRequirements(m_robotDrive, m_lime);
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_drive.drive(AutoConstants.kAutoDriveSpeed, 0);
+    m_robotDrive.drive(AutoConstants.kAutoDriveSpeed, 4, 0, false, true);
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_drive.setX();
+    m_robotDrive.setX();
   }
 
   // Returns true when the command should end.

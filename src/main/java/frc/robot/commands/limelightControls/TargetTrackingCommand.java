@@ -13,12 +13,12 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class TargetTrackingCommand extends CommandBase {
   private final Limelight m_lime;
-  private final DriveTrain m_drive;
+  private final DriveTrain m_robotDrive;
 
   /** Creates a new LimelightTrackingCommand. */
   public TargetTrackingCommand(Limelight lime, DriveTrain drive) {
     m_lime = lime;
-    m_drive = drive;
+    m_robotDrive = drive;
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -33,7 +33,7 @@ public class TargetTrackingCommand extends CommandBase {
      m_lime.Update_Limelight_Tracking(AutoConstants.kHardTurn);
     if (m_lime.m_LimelightHasValidTarget)
           {
-                m_drive.drive(AutoConstants.kDriveSpeed, m_lime.m_LimelightSteerCommand);
+                m_robotDrive.drive(AutoConstants.kDriveSpeed, m_lime.m_LimelightSteerCommand, 0, false, true);
           }
   }
   // Called once the command ends or is interrupted.

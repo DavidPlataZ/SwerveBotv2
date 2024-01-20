@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DriveTrain;
 
 public class DriveDistanceCommand extends CommandBase {
-  private final DriveTrain m_drive;
+  private final DriveTrain m_robotDrive;
   private final double m_distance;
   private final double m_speed;
   private final double m_rotation;
@@ -23,32 +23,27 @@ public class DriveDistanceCommand extends CommandBase {
   public DriveDistanceCommand(double inches, double speed, double zRotation, DriveTrain drive) {
     m_distance = inches;
     m_speed = speed;
-    m_drive = drive;
+    m_robotDrive = drive;
     m_rotation = zRotation;
-    addRequirements(m_drive);
+    addRequirements(m_robotDrive);
   }
 
   @Override
   public void initialize() {
-    m_drive.resetEncoders();
-    //m_drive.drive(m_speed, m_rotation);
+    m_robotDrive.resetEncoders();
+    //m_robotDrive.drive(m_speed, m_rotation);
     System.out.println("DRIVE DISTANCE");
   }
 
   @Override
   public void execute() {
-    m_drive.drive(m_speed, m_rotation);
+    m_robotDrive.drive(m_speed, m_rotation, m_distance, false, true);
     System.out.println("EXECUTE");
   }
 
   @Override
   public void end(boolean interrupted) {
-    m_drive.setX();
+    m_robotDrive.setX();
     System.out.println("FINISHED");
-  }
-
-  @Override
-  public boolean isFinished() {
-    return Math.abs(m_drive.getAverageEncoderDistance()) >= m_distance;
   }
 }

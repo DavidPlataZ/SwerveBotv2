@@ -40,13 +40,13 @@ public class DriveTimeCommand extends CommandBase {
 
   @Override
   public void execute() {
-    m_drive.drive(m_speed, m_rotation);
+    m_drive.drive(m_speed, m_rotation, m_rotation, false, true);
     System.out.println("EXECUTE");
   }
 
   @Override
   public void end(boolean interrupted) {
-    m_drive.stopDrive();
+    m_drive.setX();
   }
 
   @Override

@@ -32,7 +32,7 @@ public class LimelightTrackingCommand extends CommandBase {
      m_lime.Update_Limelight_Tracking(AutoConstants.kHardTurn);
     if (m_lime.m_LimelightHasValidTarget)
           {
-                m_drive.drive(AutoConstants.kMaxSpeedMetersPerSecond, m_lime.m_LimelightSteerCommand);
+                m_drive.drive(AutoConstants.kMaxSpeedMetersPerSecond, m_lime.m_LimelightSteerCommand, 0, false, true);
           }
   }
   // Called once the command ends or is interrupted.
