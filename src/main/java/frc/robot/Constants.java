@@ -129,6 +129,7 @@ public final class Constants {
     public static final double kMaxAccelerationMetersPerSecondSquared = 3;
     public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
     public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
+    public static final double kAutoDriveSpeed = 0.5;
 
     public static final double kPXController = 1;
     public static final double kPYController = 1;
@@ -142,4 +143,11 @@ public final class Constants {
   public static final class NeoMotorConstants {
     public static final double kFreeSpeedRpm = 5676;
   }
+public static final class LimelightConstants{
+  public static final int LED_ON = 3;
+  public static final int LED_OFF = 1;
+  public static final int TARGET_PIPELINE = 0;
+  public static final int DEFAULT_PIPELINE = 0;
+  public static final int DRIVE_PIPELINE = 2;
+}
 }

@@ -17,18 +17,18 @@ public class Chuck extends SubsystemBase{
     // Motors
 
     // Speaker motors
-    private final CANSparkMax motor10 = new CANSparkMax(ChuckConstants.id10, MotorType.kBrushless);
-    private final CANSparkMax motor11 = new CANSparkMax(ChuckConstants.id11, MotorType.kBrushless);
+    private final CANSparkMax speakerMotor1 = new CANSparkMax(ChuckConstants.id10, MotorType.kBrushless);
+    private final CANSparkMax speakerMotor2 = new CANSparkMax(ChuckConstants.id11, MotorType.kBrushless);
     // Amp motor
-    private final CANSparkMax motor12 = new CANSparkMax(ChuckConstants.id12, MotorType.kBrushless);
+    private final CANSparkMax ampMotor = new CANSparkMax(ChuckConstants.id12, MotorType.kBrushless);
 
     // Initialize new output
     public Chuck() {
 
         // By default, motors will be stopped
-        motor10.setIdleMode(IdleMode.kBrake);
-        motor11.setIdleMode(IdleMode.kBrake);
-        motor12.setIdleMode(IdleMode.kBrake);
+        speakerMotor1.setIdleMode(IdleMode.kBrake);
+        speakerMotor2.setIdleMode(IdleMode.kBrake);
+        ampMotor.setIdleMode(IdleMode.kBrake);
     }
 
     public void periodic() {
@@ -38,15 +38,15 @@ public class Chuck extends SubsystemBase{
     public CommandBase SpeakerShoot() {
         return run(
             () -> {
-                motor10.set(ChuckConstants.speakerspeed);
-                motor11.set(ChuckConstants.speakerspeed);
+                speakerMotor1.set(ChuckConstants.speakerspeed);
+                speakerMotor2.set(ChuckConstants.speakerspeed);
             });
     }
     
     public CommandBase AmpShoot() {
         return run(
             () -> {
-                motor12.set(ChuckConstants.ampspeed);
+                ampMotor.set(ChuckConstants.ampspeed);
             });
     }
 }
